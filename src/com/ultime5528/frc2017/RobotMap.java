@@ -8,13 +8,23 @@ package com.ultime5528.frc2017;
  * 
  */
 public class RobotMap {
-	// For example to map the left and right motors, you could define the
-	// following variables to use with your drivetrain subsystem.
-	// public static int leftMotor = 1;
-	// public static int rightMotor = 2;
-
-	// If you are using multiple modules, make sure to define both the port
-	// number and the module. For example you with a rangefinder:
-	// public static int rangefinderPort = 1;
-	// public static int rangefinderModule = 1;
+	
+	
+	//Ports PWM
+	
+	public static final int RAMPE_SERVO 					= 0;
+	public static final int CAMERA_LIGHT 					= 1;
+	public static final int TREUIL_SERVO 					= 2;
+	//														= 3;
+	//														= 4;
+	public static final int BASE_PILOTABLE_MOTEUR_GAUCHE 	= 5;
+	public static final int BASE_PILOTABLE_MOTEUR_DROIT 	= 6;
+	public static final int SHOOTER_MOTEUR 					= 7;
+	public static final int TREUIL_MOTEUR 					= 8;
+	public static final int REMONTE_BALLES_MOTEUR 			= 9;
+	
+	//Ports DIO
+	public static final int SHOOTER_ENCODER_A 				= 4;
+	public static final int SHOOTER_ENCODER_B 				= 5;
+	
 }

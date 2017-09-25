@@ -8,8 +8,7 @@ import edu.wpi.first.wpilibj.livewindow.LiveWindow;
 import edu.wpi.first.wpilibj.smartdashboard.SendableChooser;
 import edu.wpi.first.wpilibj.smartdashboard.SmartDashboard;
 
-import com.ultime5528.frc2017.commands.ExampleCommand;
-import com.ultime5528.frc2017.subsystems.ExampleSubsystem;
+import com.ultime5528.frc2017.subsystems.*;
 
 /**
  * The VM is configured to automatically run this class, and to call the
@@ -20,7 +19,14 @@ import com.ultime5528.frc2017.subsystems.ExampleSubsystem;
  */
 public class Robot extends IterativeRobot {
 
-	public static final ExampleSubsystem exampleSubsystem = new ExampleSubsystem();
+	public static final boolean DEBUG = true;
+	
+	public static BasePilotable basePilotable;
+	public static Shooter shooter;
+	public static Rampe rampe;
+	public static RemonteBalles remonteBalles;
+	public static Treuil treuil;
+	public static Camera camera;
 	public static OI oi;
 
 	Command autonomousCommand;
@@ -32,8 +38,23 @@ public class Robot extends IterativeRobot {
 	 */
 	@Override
 	public void robotInit() {
+		
+		//Création des composantes
+		//RobotMap.init();
+		
+		//Sous-systèmes
+		basePilotable = new BasePilotable();
+		shooter = new Shooter();
+		rampe = new Rampe();
+		remonteBalles = new RemonteBalles();
+		treuil = new Treuil();
+		camera = new Camera();
+		
+		//L'OI doit absolument être créé APRÈS les sous-systèmes!
 		oi = new OI();
-		chooser.addDefault("Default Auto", new ExampleCommand());
+		
+		//Mode autonome
+		//chooser.addDefault("Default Auto", new ExampleCommand());
 		// chooser.addObject("My Auto", new MyAutoCommand());
 		SmartDashboard.putData("Auto mode", chooser);
 	}
@@ -45,7 +66,7 @@ public class Robot extends IterativeRobot {
 	 */
 	@Override
 	public void disabledInit() {
-		
+
 	}
 
 	@Override
@@ -113,4 +134,6 @@ public class Robot extends IterativeRobot {
 	public void testPeriodic() {
 		LiveWindow.run();
 	}
+
+
 }
