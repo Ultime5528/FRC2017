@@ -8,6 +8,7 @@ import org.opencv.imgproc.*;
 
 import edu.wpi.first.wpilibj.DriverStation;
 
+import static com.ultime5528.frc2017.K.Grip.*;
 
 /**
 * GripPipeline class.
@@ -24,13 +25,6 @@ public class GripPipeline {
 	private Mat cvErodeOutput = new Mat();
 	private ArrayList<MatOfPoint> findContoursOutput = new ArrayList<MatOfPoint>();
 	private ArrayList<MatOfPoint> filterContoursOutput = new ArrayList<MatOfPoint>();
-
-	public static volatile double H_MIN = 55.0;
-	public static volatile double H_MAX = 100.0;
-	public static volatile double S_MIN = 100.0;
-	public static volatile double S_MAX = 255.0;
-	public static volatile double V_MIN = 100.0;
-	public static volatile double V_MAX = 255.0;
 	
 	private static GripPipeline instance;
 	

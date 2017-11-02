@@ -7,6 +7,8 @@ import edu.wpi.first.wpilibj.command.InstantCommand;
 
 /**
  * {@link InstantCommand} activant le {@link Treuil} pour s'enrouler à la corde.
+ * Cette commande est Instant, car on l'utilise avec la méthode whileHeld de
+ * JoystickButton (voir OI).
  * 
  * @author Etienne
  */

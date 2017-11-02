@@ -3,6 +3,7 @@ package com.ultime5528.frc2017.subsystems;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.concurrent.atomic.AtomicBoolean;
+import java.util.function.BiConsumer;
 
 import org.opencv.core.Core;
 import org.opencv.core.CvType;
@@ -14,7 +15,7 @@ import org.opencv.core.Scalar;
 import org.opencv.imgproc.Imgproc;
 
 import com.ultime5528.frc2017.GripPipeline;
-import com.ultime5528.frc2017.RobotMap;
+import com.ultime5528.frc2017.K;
 
 import edu.wpi.cscore.CvSink;
 import edu.wpi.cscore.CvSource;
@@ -23,20 +24,19 @@ import edu.wpi.cscore.UsbCamera;
 import edu.wpi.cscore.VideoMode.PixelFormat;
 import edu.wpi.first.wpilibj.CameraServer;
 import edu.wpi.first.wpilibj.DriverStation;
+import edu.wpi.first.wpilibj.IterativeRobot;
+import edu.wpi.first.wpilibj.RobotBase;
 import edu.wpi.first.wpilibj.Spark;
 import edu.wpi.first.wpilibj.command.Subsystem;
 import edu.wpi.first.wpilibj.livewindow.LiveWindow;
+
+//Toutes les contantes de Camera sont importées directement.
+import static com.ultime5528.frc2017.K.Camera.*;
 
 /**
  *
  */
 public class Camera extends Subsystem {
-
-	public static final int HAUTEUR = 240;
-	public static final int LARGEUR = 320;
-	
-	public static int HIGH_EXPOSURE = 40;
-	public static int LOW_EXPOSURE = 5;
 	
 	private Spark light;
 	
@@ -47,6 +47,8 @@ public class Camera extends Subsystem {
 	
 	private AtomicBoolean runVision;
 	
+	private BiConsumer<Double, Double> callback;
+	
 	//Thread safe
 	private double center;
 	private double largeur;
@@ -54,7 +56,7 @@ public class Camera extends Subsystem {
     
 	public Camera() {
 		
-		light = new Spark(RobotMap.CAMERA_LIGHT);
+		light = new Spark(K.Ports.CAMERA_LIGHT);
 		LiveWindow.addActuator("Camera", "Light", light);
 		
 		camAvant = new UsbCamera("CamAvant", 0);
@@ -67,80 +69,109 @@ public class Camera extends Subsystem {
 		
 		lock = new Object();
 		
-		visionThread = new Thread( () -> {
-			
-			CameraServer cs = CameraServer.getInstance();
-			
-			CvSink sinkCamAvant = new CvSink("SinkCamAvant");
-			sinkCamAvant.setSource(camAvant);
-			
-			CvSink sinkCamCorde = new CvSink("SinkCamCorde");
-			sinkCamCorde.setSource(camCorde);
-			
-			CvSource sourceAvant = new CvSource("SourceAvant", PixelFormat.kMJPEG, LARGEUR, HAUTEUR, 30);
-			cs.addCamera(sourceAvant);
-			MjpegServer serverAvant = cs.addServer("ServerAvant");
-			serverAvant.setSource(sourceAvant);
-			
-			CvSource sourceVision = new CvSource("SourceVision", PixelFormat.kMJPEG, LARGEUR, HAUTEUR, 30);
-			cs.addCamera(sourceVision);
-			MjpegServer serverVision = cs.addServer("ServerVision");
-			serverVision.setSource(sourceVision);
-			
-			CvSource sourceCorde = new CvSource("SourceCorde", PixelFormat.kMJPEG, LARGEUR, HAUTEUR, 20);
-			cs.addCamera(sourceCorde);
-			MjpegServer serverCorde = cs.addServer("ServerCorde");
-			serverCorde.setSource(sourceCorde);
-			
-			
-			Mat imgAvant = new Mat(HAUTEUR, LARGEUR, CvType.CV_8UC3, new Scalar(255, 0, 0));
-			Imgproc.putText(imgAvant, "Cam avant", new Point(20, 120),
-					Core.FONT_HERSHEY_TRIPLEX,1.0, new Scalar(255, 255, 255));
-			
-			Mat imgGrip = new Mat(HAUTEUR, LARGEUR, CvType.CV_8UC3, new Scalar(0, 0, 255));
-			Imgproc.putText(imgGrip, "GRIP", new Point(20, 120),
-					Core.FONT_HERSHEY_TRIPLEX,1.0, new Scalar(255, 255, 255));
-			
-			Mat imgCorde = new Mat(HAUTEUR, LARGEUR, CvType.CV_8UC3, new Scalar(0, 255, 0));
-			Imgproc.putText(imgCorde, "Cam corde", new Point(20, 120),
-					Core.FONT_HERSHEY_TRIPLEX,1.0, new Scalar(255, 255, 255));
-			
-			while(!Thread.interrupted()) {
-				
-				try {
-					
-					sinkCamCorde.grabFrame(imgCorde);
-					sourceCorde.putFrame(imgCorde);
-					
-					sinkCamAvant.grabFrame(imgAvant);
-					sourceAvant.putFrame(imgAvant);
-					
-					if(runVision.get()) {
-						
-						Analyse(imgAvant, imgGrip);
-						
-					}
-					
-					sourceVision.putFrame(imgGrip);
-					
-				}
-				catch(Exception e) {
-					//DriverStation.reportError(e.getMessage(), true);
-					e.printStackTrace();
-				}
-				
-				
-			}
-			
-			DriverStation.reportError("Vision Thread will stop", false);
-			
-		});
+		//Thread qui exécute la méthode threadVision
+		visionThread = new Thread(this::visionLoop);
 		visionThread.start();
 		
 		
 	}
-
-	private void Analyse(Mat input, Mat output) {
+	
+	
+	
+	/**
+	 * Boucle du code de la vision.
+	 * La méthode UNIQUEMENT être appelé dans un Thread, car elle est bloquante. 
+	 */
+	private void visionLoop() {
+		
+		//TODO : quelles méthodes sont vraiments nécessaires? À essayer
+		
+		//Référence vers le serveur
+		CameraServer cs = CameraServer.getInstance();
+		
+		//
+		// Caméra avant
+		//
+		CvSink sinkAvant = new CvSink("SinkCamAvant");
+		sinkAvant.setSource(camAvant);
+		//
+		CvSource sourceAvant = new CvSource("SourceAvant", PixelFormat.kMJPEG, LARGEUR, HAUTEUR, 30);
+		cs.addCamera(sourceAvant);
+		MjpegServer serverAvant = cs.addServer("ServerAvant");
+		serverAvant.setSource(sourceAvant);
+		
+		//
+		// Caméra corde (treuil)
+		//
+		CvSink sinkCorde = new CvSink("SinkCamCorde");
+		sinkCorde.setSource(camCorde);
+		//
+		CvSource sourceCorde = new CvSource("SourceCorde", PixelFormat.kMJPEG, LARGEUR, HAUTEUR, 20);
+		cs.addCamera(sourceCorde);
+		MjpegServer serverCorde = cs.addServer("ServerCorde");
+		serverCorde.setSource(sourceCorde);
+		
+		//
+		// Envoi images de vision
+		//
+		CvSource sourceVision = new CvSource("SourceVision", PixelFormat.kMJPEG, LARGEUR, HAUTEUR, 30);
+		cs.addCamera(sourceVision);
+		MjpegServer serverVision = cs.addServer("ServerVision");
+		serverVision.setSource(sourceVision);
+		
+		//
+		// Images
+		//
+		Mat imgAvant = new Mat(HAUTEUR, LARGEUR, CvType.CV_8UC3, new Scalar(255, 0, 0));
+		Imgproc.putText(imgAvant, "Cam avant", new Point(20, 120),
+				Core.FONT_HERSHEY_TRIPLEX,1.0, new Scalar(255, 255, 255));
+		
+		Mat imgVision = new Mat(HAUTEUR, LARGEUR, CvType.CV_8UC3, new Scalar(0, 0, 255));
+		Imgproc.putText(imgVision, "GRIP", new Point(20, 120),
+				Core.FONT_HERSHEY_TRIPLEX,1.0, new Scalar(255, 255, 255));
+		
+		
+		Mat imgCorde = new Mat(HAUTEUR, LARGEUR, CvType.CV_8UC3, new Scalar(0, 255, 0));
+		Imgproc.putText(imgCorde, "Cam corde", new Point(20, 120),
+				Core.FONT_HERSHEY_TRIPLEX,1.0, new Scalar(255, 255, 255));
+		
+		
+		while(!Thread.interrupted()) {
+			
+			try {
+				sinkCorde.grabFrame(imgCorde);
+				sourceCorde.putFrame(imgCorde);
+				
+				sinkAvant.grabFrame(imgAvant);
+				sourceAvant.putFrame(imgAvant);
+				
+				//TODO Bug d'affichage
+				if(runVision.get()) {
+					analyseImage(imgAvant, imgVision);
+				}
+				
+				//TODO Clone avant de la donner à putFrame?
+				
+				//imgCorde.copyTo(imgVision);
+				sourceVision.putFrame(imgVision);
+			}
+			catch(Exception e) {
+				//DriverStation.reportError(e.getMessage(), true);
+				e.printStackTrace();
+			}
+		}
+		
+		DriverStation.reportError("Thread Vision s'arrete", false);
+	}
+	
+	
+	
+	/**
+	 * Détermine le centre de la cible.
+	 * @param input Image source (caméra)
+	 * @param output Image résultante (noir et blanc avec rectangles)
+	 */
+	private void analyseImage(Mat input, Mat output) {
 		
 		int nbContours;
 		double center, largeur;
@@ -150,74 +181,101 @@ public class Camera extends Subsystem {
 		MatOfPoint mainContoursMat = new MatOfPoint();
 		Rect rect;
 		
+		//Utilisation de GRIP pour déterminer les contours
 		grip.process(input);
-		grip.cvErodeOutput().copyTo(output);
 		
+		//Copie du résultat
+		//TODO
+		//grip.cvErodeOutput().copyTo(output);
+		//grip.hsvThresholdOutput().copyTo(output);
+		Imgproc.cvtColor(grip.cvErodeOutput(), output, Imgproc.COLOR_GRAY2BGR, 3);
+		
+		// On prend les contours et le nombre de contours trouvés.
 		allContours = grip.findContoursOutput();
 		nbContours = allContours.size();
 		
+		// On trace chaque contour(rectangle) trouvé sur l'image.
 		for(MatOfPoint contour : allContours) {
 			Rect eachRect = Imgproc.boundingRect(contour);
-			Imgproc.rectangle(output, new Point(eachRect.x, eachRect.y),
+			/*Imgproc.rectangle(output, new Point(eachRect.x, eachRect.y),
 					new Point(eachRect.x + eachRect.width, eachRect.y + eachRect.height),
-					new Scalar(255, 0, 0));
+					new Scalar(255, 0, 0));*/
 		}
 		
 		
-		if(nbContours == 0) {
+		//
+		// Analyse des contours
+		//
+		
+		if(nbContours == 0) { // Aucun contour
 			DriverStation.reportWarning("Aucun contour detecte", false);
 		}
 		else {
 			
-			if(nbContours == 1) {
+			if(nbContours == 1) { // Un seul contour
 				
 				DriverStation.reportWarning("1 seul contour detecte", false);
+				
+				// On utilise le centre de l'unique contour.
 				mainContoursList.addAll(allContours.get(0).toList());
 				
 			}
-			else if(allContours.size() == 2) {
+			else if(allContours.size() == 2) { // Deux contours, situation idéale
 				
 				 mainContoursList.addAll(allContours.get(0).toList());
 				 mainContoursList.addAll(allContours.get(1).toList());
 				 
 			}
-			else {
+			else { // Plus de 2 contours : il faut déterminer les meilleurs
 			
-				int k = -1;
+				// Test de tous les couples de contours possibles. Pour n contours, il y a 
+				// n(n - 1) / 2 possibilités. Par exemple, avec n = 3, on a (1, 2), (1, 3)
+				// et (2, 3), donc 3 possibilités.
+				
+				int currentCouple = 0;
 				ContourCoupleScore[] scores = new ContourCoupleScore[nbContours * (nbContours - 1) / 2];
 				
+				// Pour chaque couple possible, on détermine leur score.
 				for(int i = 0; i < nbContours; i++)
 					for(int j = i + 1; j < nbContours; j++) {
 						
-						scores[++k] = new ContourCoupleScore(i, j);
-						determineScore(allContours.get(i), allContours.get(j), scores[k]);
+						scores[currentCouple] = new ContourCoupleScore(i, j);
+						determineScore(allContours.get(i), allContours.get(j), scores[currentCouple]);
+						currentCouple += 1;
 						
 					}
 				
-				int best = 0;
+				int best = 0; // Indice du meilleur couple
 				
-				for(k = 1; k < nbContours; k++) {
+				// On détermine l'indice du score maximal
+				for(currentCouple = 1; currentCouple < nbContours; currentCouple++) {
 					
-					//TODO : pas optimal d'appeler score() à chaque fois
-					if(scores[k].score() > scores[best].score())
-						best = k;
+					if(scores[currentCouple].score() > scores[best].score())
+						best = currentCouple;
 					
 				}
 				
+				// Utilisation du couple optimal
 				mainContoursList.addAll(allContours.get(scores[best].first).toList());
 				mainContoursList.addAll(allContours.get(scores[best].second).toList());
 				
 			}
 			
+			// Conversion de la liste des points choisis en rectangle.
+			
 			mainContoursMat.fromList(mainContoursList);
 			rect = Imgproc.boundingRect(mainContoursMat);
 			
+			// Calcul 
 			center = rect.x + rect.width / 2.0;
 			largeur = (double)rect.width / input.cols();
 			
 			synchronized (lock) {
 				this.center = center;
 				this.largeur = largeur;
+				
+				if(callback != null)
+					callback.accept(center, largeur);
 			}
 			
 			Imgproc.rectangle(output, new Point(rect.x, rect.y),
@@ -278,6 +336,12 @@ public class Camera extends Subsystem {
 	}
 	
 	
+	public void setCallback(BiConsumer<Double, Double> callback) {
+		synchronized (lock) {
+			this.callback = callback;
+		}
+	}
+	
 	public double getCenter() {
 		
 		synchronized (lock) {
@@ -295,8 +359,7 @@ public class Camera extends Subsystem {
 	}
 	
 	public void initDefaultCommand() {
-        // Set the default command for a subsystem here.
-        //setDefaultCommand(new MySpecialCommand());
+        // Aucune commande par défaut.
     }
 	
 	
@@ -314,7 +377,6 @@ public class Camera extends Subsystem {
 		public int first = 0;
 		public int second = 0;
 		
-		private final int NB_CHAMPS = 5;
 		
 		public double espaceCentral = 0.0;
 		public double largeurSemblable = 0.0;
@@ -322,6 +384,8 @@ public class Camera extends Subsystem {
 		public double largeurTotale = 0.0;
 		public double hauteurTotale = 0.0;
 		
+		private final int NB_CHAMPS = 5;
+		private double score = Double.NaN;
 		
 		public ContourCoupleScore(int first, int second) {
 			
@@ -330,16 +394,22 @@ public class Camera extends Subsystem {
 			
 		}
 		
-		
-		public double score() {
-			
-			double score = normalizeResult(espaceCentral)
+		public void computeScore() {
+			score = normalizeResult(espaceCentral)
 					+ normalizeResult(largeurSemblable)
 					+ normalizeResult(hauteurSemblable)
 					+ normalizeResult(largeurTotale)
 					+ normalizeResult(hauteurTotale);
 			
-			return score / NB_CHAMPS;
+			score /= NB_CHAMPS;	
+		}
+		
+		public double score() {
+			
+			if(Double.isNaN(score))
+				computeScore();
+			
+			return score;
 		}
 		
 		

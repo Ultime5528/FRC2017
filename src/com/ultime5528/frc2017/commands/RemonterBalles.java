@@ -20,11 +20,6 @@ public class RemonterBalles extends Command {
 
     // Called just before this Command runs the first time
     protected void initialize() {
-    	
-    	if(Robot.DEBUG) {
-    		Preferences prefs = Preferences.getInstance();
-    		RemonteBalles.VITESSE = prefs.getDouble("remonteBallesVitesse", RemonteBalles.VITESSE);
-    	}
     		
     }
 

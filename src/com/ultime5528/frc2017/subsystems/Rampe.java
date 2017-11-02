@@ -4,7 +4,7 @@ import edu.wpi.first.wpilibj.Servo;
 import edu.wpi.first.wpilibj.command.Subsystem;
 import edu.wpi.first.wpilibj.livewindow.LiveWindow;
 
-import com.ultime5528.frc2017.RobotMap;
+import com.ultime5528.frc2017.K;
 import com.ultime5528.frc2017.commands.FermerRampe;
 
 /**
@@ -15,11 +15,7 @@ import com.ultime5528.frc2017.commands.FermerRampe;
  * 
  * @author Étienne
  */
-public class Rampe extends Subsystem {
-
-	public static double POSITION_OUVERTE = 150.0;
-	public static double POSITION_FERMEE = 100.0;
-	
+public class Rampe extends Subsystem {	
 	
 	private Servo servo;
 	
@@ -28,7 +24,7 @@ public class Rampe extends Subsystem {
 	public Rampe() {
 		super("Rampe");
 		
-		servo = new Servo(RobotMap.RAMPE_SERVO);
+		servo = new Servo(K.Ports.RAMPE_SERVO);
 		LiveWindow.addActuator("Rampe", "Servo", servo);
 		
 	}
@@ -43,7 +39,7 @@ public class Rampe extends Subsystem {
      * Bloque le chemin aux balles.
      */
     public void fermer() {
-    	servo.setAngle(POSITION_FERMEE);
+    	servo.setAngle(K.Rampe.POSITION_FERMEE);
     }
     
     
@@ -51,7 +47,7 @@ public class Rampe extends Subsystem {
      * Laisse les balles passer pour aller dans le shooter.
      */
     public void ouvrir() {
-    	servo.setAngle(POSITION_OUVERTE);
+    	servo.setAngle(K.Rampe.POSITION_OUVERTE);
     }
     
 }

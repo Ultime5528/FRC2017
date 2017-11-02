@@ -1,6 +1,6 @@
 package com.ultime5528.frc2017.subsystems;
 
-import com.ultime5528.frc2017.RobotMap;
+import com.ultime5528.frc2017.K;
 
 import edu.wpi.first.wpilibj.VictorSP;
 import edu.wpi.first.wpilibj.command.Subsystem;
@@ -12,17 +12,14 @@ import edu.wpi.first.wpilibj.command.Subsystem;
  */
 public class RemonteBalles extends Subsystem {
 
-	public static double VITESSE = -0.4;
-	
-	
-    private VictorSP moteur;
+	private VictorSP moteur;
 
     
     //Constructeur par défaut
     public RemonteBalles() {
     	super("RemonteBalles");
     	
-    	moteur = new VictorSP(RobotMap.REMONTE_BALLES_MOTEUR);
+    	moteur = new VictorSP(K.Ports.REMONTE_BALLES_MOTEUR);
     	
     }
     
@@ -37,7 +34,7 @@ public class RemonteBalles extends Subsystem {
      * Fais remonter les balles.
      */
     public void remonter() {
-    	moteur.set(VITESSE);
+    	moteur.set(K.RemonteBalles.VITESSE);
     }
     
     

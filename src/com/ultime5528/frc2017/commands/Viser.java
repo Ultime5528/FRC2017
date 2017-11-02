@@ -12,34 +12,42 @@ import edu.wpi.first.wpilibj.command.Command;
  */
 public class Viser extends Command {
 
+	private Object lock;
+	private double _centre;
+	private double _largeur;
+	
     public Viser() {
-        requires(Robot.camera);
+    	requires(Robot.camera);
+    	lock = new Object();
+    }
+    
+    
+    public void setCoordinates(double centre, double largeur) {
+    	synchronized (lock) {
+			_centre = centre;
+			_largeur = largeur;
+		}
     }
 
     // Called just before this Command runs the first time
     protected void initialize() {
     	
-    	if(Robot.DEBUG) {
-    		
-    		Preferences prefs = Preferences.getInstance();
-
-    		GripPipeline.H_MIN = prefs.getDouble("cameraHMin", GripPipeline.H_MIN);
-    		GripPipeline.H_MAX = prefs.getDouble("cameraHMax", GripPipeline.H_MAX);
-    		GripPipeline.S_MIN = prefs.getDouble("cameraSMin", GripPipeline.S_MIN);
-    		GripPipeline.S_MAX = prefs.getDouble("cameraSMax", GripPipeline.S_MAX);
-    		GripPipeline.V_MIN = prefs.getDouble("cameraVMin", GripPipeline.V_MIN);
-    		GripPipeline.V_MAX = prefs.getDouble("cameraVMax", GripPipeline.V_MAX);
-    		Camera.LOW_EXPOSURE = prefs.getInt("cameraLowExposure", Camera.LOW_EXPOSURE);
-    		Camera.HIGH_EXPOSURE = prefs.getInt("cameraHighExposure", Camera.HIGH_EXPOSURE);
-    		
-    	}
-    	
+    	Robot.camera.setCallback(this::setCoordinates);
     	Robot.camera.startVision();
 
     }
 
     // Called repeatedly when this Command is scheduled to run
     protected void execute() {
+    	
+    	double centre, largeur;
+    	
+    	synchronized (lock) {
+			centre = _centre;
+			largeur = _largeur;
+		}
+    	
+    	
     }
 
     // Make this return true when this Command no longer needs to run execute()

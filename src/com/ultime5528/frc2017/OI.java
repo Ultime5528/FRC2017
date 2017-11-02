@@ -14,12 +14,14 @@ import edu.wpi.first.wpilibj.XboxController;
 import edu.wpi.first.wpilibj.buttons.JoystickButton;
 
 /**
- * Operator Interface. Crée le lien entre la console de contrôle et les commandes/groupes de commandes 
- * qui contrôlent le robot.
+ * Operator Interface. Crée le lien entre la console de contrôle et les commandes
+ * (ou groupes de commandes) qui contrôlent le robot.
+ * 
+ * @author Etienne
  */
 public class OI {
 	
-	//Joystick principal
+	//Joystick principal et ses boutons
 	private Joystick stick = new Joystick(0);
 	private JoystickButton button2 = new JoystickButton(stick, 2);
 	private JoystickButton button3 = new JoystickButton(stick, 3);
@@ -28,7 +30,7 @@ public class OI {
 	private JoystickButton button11 = new JoystickButton(stick, 11);
 	
 	
-	//XBox
+	//Manette de XBox et ses boutons
 	private XboxController gamepad = new XboxController(1);
 	private JoystickButton buttonA = new JoystickButton(gamepad, 1);
 	private JoystickButton buttonB = new JoystickButton(gamepad, 2);
@@ -37,7 +39,7 @@ public class OI {
 	
 	public OI() {
 		
-		stick = new Joystick(0);
+		//Liens entre les boutons et les commandes
 		
 		button2.toggleWhenPressed(new RemonterBalles());
 		button3.toggleWhenPressed(new Viser());
@@ -51,6 +53,7 @@ public class OI {
 		
 	}
 	
+	
 	/**
 	 * Retourne le joystick principal.
 	 * @return Le joystick principal (port 0).
@@ -60,4 +63,11 @@ public class OI {
 	}
 	
 	
+	public double getJoystickX() {
+		return stick.getX();
+	}
+	
+	public double getJoystickY() {
+		return stick.getY();
+	}
 }

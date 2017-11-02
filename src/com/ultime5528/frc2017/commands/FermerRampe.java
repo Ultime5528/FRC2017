@@ -8,6 +8,8 @@ import edu.wpi.first.wpilibj.command.InstantCommand;
 
 /**
  * Ferme la {@link Rampe}, soit l'accès des balles au {@link Shooter}.
+ * Cette commande hérite de InstantCommand, elle n'a donc pas de 
+ * méthode isFinished, car elle est automatiquement terminée instantanément.
  * 
  * @author Etienne
  */
@@ -20,13 +22,9 @@ public class FermerRampe extends InstantCommand {
 
     // Called just before this Command runs the first time
     protected void initialize() {
-    	
-    	if(Robot.DEBUG) {
-    		Preferences prefs = Preferences.getInstance();
-    		Rampe.POSITION_FERMEE = prefs.getDouble("rampePositionFermee", Rampe.POSITION_FERMEE);
-    	}
     		
     	Robot.rampe.fermer();
+    	
     }
 
     // Called repeatedly when this Command is scheduled to run

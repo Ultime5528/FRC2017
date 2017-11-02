@@ -39,9 +39,6 @@ public class Robot extends IterativeRobot {
 	@Override
 	public void robotInit() {
 		
-		//Création des composantes
-		//RobotMap.init();
-		
 		//Sous-systèmes
 		basePilotable = new BasePilotable();
 		shooter = new Shooter();
@@ -117,6 +114,9 @@ public class Robot extends IterativeRobot {
 		// this line or comment it out.
 		if (autonomousCommand != null)
 			autonomousCommand.cancel();
+		
+		// Update de toutes les constantes
+		K.update();
 	}
 
 	/**

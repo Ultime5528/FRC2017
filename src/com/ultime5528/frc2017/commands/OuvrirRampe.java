@@ -24,15 +24,9 @@ public class OuvrirRampe extends Command {
     protected void initialize() {
     	
     	//On empêche l'ouverture si le shooter n'est pas démarré.
-    	if(Robot.shooter.getPIDController().isEnabled()) {
+    	if(!Robot.shooter.getPIDController().isEnabled()) {
     		this.cancel();
     		return;
-    	}
-    	
-    	if(Robot.DEBUG) {
-    		Preferences prefs = Preferences.getInstance();
-    		Rampe.POSITION_FERMEE = prefs.getDouble("rampePositionFermee", Rampe.POSITION_FERMEE);
-    		Rampe.POSITION_OUVERTE = prefs.getDouble("rampePositionOuverte", Rampe.POSITION_OUVERTE);
     	}
     	
     	Robot.rampe.ouvrir();

@@ -4,7 +4,9 @@ import edu.wpi.first.wpilibj.command.CommandGroup;
 import edu.wpi.first.wpilibj.command.WaitCommand;
 
 /**
- * 
+ * Commande de groupe combinant {@link BackSpin} et {@link Spin}.
+ * Le {@link Shooter} tourne à l'envers pour enlever les balles
+ * restées à l'intérieur, puis atteint sa vitesse de tir.
  * 
  * @author Etienne
  */

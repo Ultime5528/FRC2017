@@ -1,5 +1,6 @@
 package com.ultime5528.frc2017.commands;
 
+import com.ultime5528.frc2017.K;
 import com.ultime5528.frc2017.Robot;
 import com.ultime5528.frc2017.subsystems.Shooter;
 
@@ -8,6 +9,7 @@ import edu.wpi.first.wpilibj.command.Command;
 
 /**
  * Démarre le {@link Shooter} pour qu'il atteigne sa vitesse de tir.
+ * Il est mieux d'utiliser la commande {@link SafeSpin} que celle-ci. 
  * 
  * @author Étienne
  */
@@ -20,25 +22,8 @@ public class Spin extends Command {
 
     // Called just before this Command runs the first time
     protected void initialize() {
-    	
-    	if(Robot.DEBUG) {
-    		
-    		Preferences prefs = Preferences.getInstance();
-    		
-    		Shooter.P = prefs.getDouble("p", Shooter.P);
-    		Shooter.I = prefs.getDouble("i", Shooter.I);
-    		Shooter.D = prefs.getDouble("d", Shooter.D);
-    		Shooter.F = prefs.getDouble("f", Shooter.F);
-    		Robot.shooter.getPIDController().setPID(Shooter.P, Shooter.I, Shooter.D, Shooter.F);
-    		
-    		Shooter.TOLERANCE = prefs.getDouble("tolerance", Shooter.TOLERANCE);
-    		Robot.shooter.setAbsoluteTolerance(Shooter.TOLERANCE);
-    		
-    		Shooter.VITESSE = prefs.getDouble("vitesse", Shooter.VITESSE);
-    	}
-    	
-    	
-    	Robot.shooter.setSetpoint(Shooter.VITESSE);
+
+    	Robot.shooter.setSetpoint(K.Shooter.VITESSE);
     	Robot.shooter.enable();
     	
     }

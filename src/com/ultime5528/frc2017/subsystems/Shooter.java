@@ -1,13 +1,14 @@
 package com.ultime5528.frc2017.subsystems;
 
+import com.ultime5528.frc2017.K;
 import com.ultime5528.frc2017.Robot;
-import com.ultime5528.frc2017.RobotMap;
 import edu.wpi.first.wpilibj.VictorSP;
 import edu.wpi.first.wpilibj.CounterBase.EncodingType;
 import edu.wpi.first.wpilibj.command.PIDSubsystem;
 import edu.wpi.first.wpilibj.livewindow.LiveWindow;
 import edu.wpi.first.wpilibj.smartdashboard.SmartDashboard;
 import edu.wpi.first.wpilibj.Encoder;
+
 
 /**
  * {@link PIDSubsystem} qui gère le shooter du robot.
@@ -22,15 +23,6 @@ import edu.wpi.first.wpilibj.Encoder;
  * @see PIDSubsystem
  */
 public class Shooter extends PIDSubsystem {
-
-	public static double P = 0.0;
-	public static double I = 0.0;
-	public static double D = 0.0;
-	public static double F = 0.0;
-	public static double TOLERANCE = 0.0; //Tolérance absolue du PID
-	public static double VITESSE = 0.0; //Setpoint de vitesse
-	public static double BACK_VITESSE = 0.0; //Vitesse inverse au début
-	
 	
 	private VictorSP moteur;
 	private Encoder encoder;
@@ -39,12 +31,12 @@ public class Shooter extends PIDSubsystem {
 	//Constructeur par défaut
 	public Shooter() {
 		
-		super("Shooter", P, I, D, F);
+		super("Shooter", K.Shooter.P, K.Shooter.I, K.Shooter.D, K.Shooter.F);
 		
-		moteur = new VictorSP(RobotMap.SHOOTER_MOTEUR);
+		moteur = new VictorSP(K.Ports.SHOOTER_MOTEUR);
 		LiveWindow.addActuator("Shooter", "Moteur", moteur);
 		
-		encoder = new Encoder(RobotMap.SHOOTER_ENCODER_A, RobotMap.SHOOTER_ENCODER_B, false, EncodingType.k4X);
+		encoder = new Encoder(K.Ports.SHOOTER_ENCODER_A, K.Ports.SHOOTER_ENCODER_B, false, EncodingType.k4X);
 		LiveWindow.addSensor("Shooter", "Encoder", encoder);
 		
 		//TODO : est-ce nécessaire?
@@ -53,7 +45,7 @@ public class Shooter extends PIDSubsystem {
 		LiveWindow.addActuator("Shooter", "PIDController", getPIDController());
 		
 		setOutputRange(-1.0, 1.0);
-		setAbsoluteTolerance(TOLERANCE);
+		setAbsoluteTolerance(K.Shooter.TOLERANCE);
 		
 		//TODO: est-ce nécessaire?
 		disable();
